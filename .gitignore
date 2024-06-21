@@ -5,3 +5,4 @@ database/**/*.png
 weights/**/*.tar
 weights/**/*.pth
 weights/**/*.xml
+**/__pycache__/

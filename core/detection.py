@@ -66,7 +66,7 @@ class RetinaDetector():
         # model initialization
         torch.set_grad_enabled(False)
         self.net = TorchRetina()
-        self.net = load_model(self.net, 'weights\mobilenet0.25_Final.pth')
+        self.net = load_model(self.net, 'weights/mobilenet0.25_Final.pth')
         self.net.eval()
         cudnn.benchmark = True
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

@@ -1,3 +1,4 @@
+
 import torch, os, glob, numpy as np, cv2, argparse
 from core.detection import RetinaDetector, CascadeDetector
 from core.recognition import ArcRecognizer
@@ -90,7 +91,10 @@ class Handler():
 	"""
 	def recognize(self, img=cv2.imread('', cv2.IMREAD_COLOR)):
 		# detect face from image
+		start_det_time = time.time()
 		faces, landms = self.detector.detect(img)
+		end_det_time = time.time()
+		print(f"det duration: { end_det_time - start_det_time}")
 		# iterate through each image detected in frame
 		for idx in range(len(faces)):
 			# getting face bounding box coordinates
@@ -105,10 +109,13 @@ class Handler():
 				landmk = landms[idx]
 			elif self.backend == 'opencv':
 				landmk = []
+			start_rec_time = time.time()
 			# get input blob
 			blob = self.arcface.get_image(face_frame, landmk)
 			# get face feature
 			feat = self.arcface.forward(blob)
+			end_rec_time = time.time()
+			print(f"rec duration: { end_rec_time - start_rec_time}")
 
 			"""
 				NOTE:
@@ -192,8 +199,6 @@ class Handler():
 				self.database_state = False
 				return feat, img
 		return [], img
-	
-	
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Facial Recognition Application')
@@ -209,66 +214,20 @@ if __name__ == '__main__':
 	# # initialize program
 	STATE = True
 	FACE_NUM_THRESH = 20
-	while STATE:
-		cam = cv2.VideoCapture(0)
-		# face registering
-		if args['mode'] == 0:
-			# initialaize parameters
-			# identity_folder_path = input('Identity folder path(with forward "/" slash): ')
-			database_path = args['database']
-			identity_name = input('Input identity\'s name: ')
-			identity_path = os.path.normpath(os.path.join(database_path + '/' + identity_name))
-			# check if identity folder exist, create if not
-			if not os.path.exists(identity_path):
-				os.mkdir(identity_path)
-			# get current number of images belong to identity (if exist)
-			face_count = len(glob.glob(os.path.join(identity_path, '/*.png')) + \
-			glob.glob(os.path.join(identity_path, '/*.jpg')))
-			register_count = 0
-			features = []
-			# loop
-			while True:
-				ret, frame = cam.read()
-				original = frame.copy()
-				if not ret:
-					handler.cal_and_app_feature(features, identity_name)
-					break
-				if register_count > 20 or face_count > 30:
-					handler.cal_and_app_feature(features, identity_name)
-					print('Faces belong to identity exceeded require threshold, delete old images or continue with normal functionality!')
-					break
-				feature, ret_frame = handler.register_identity(frame)
-				# show result if process registering success
-				if len(feature) != 0:
-					# append to current feature vector (of one identity)
-					features.append(feature)
-					# save image for later database initialization
-					cv2.imwrite(os.path.normpath(os.path.join(database_path + '/' + identity_name, identity_name + '_' + str(face_count) + '.png')),
-								original)
-					face_count += 1
-				print('Press any key to continue registering!')
-				cv2.imshow('frame', ret_frame)
-				cv2.waitKey(0)
-			cv2.destroyAllWindows()
-			args['mode'] = 1
-		# face recognition
-		elif args['mode'] == 1:
-			# re-initialize face database in case of new registration
-			handler.init_identity_database(args['database'])
-			loop
-			while True:
-			    ret, frame = cam.read()
-			    if not ret:
-			        break
-			    ret_frame = handler.recognize(frame)
-			    # show result if process registering success
-			    cv2.imshow('Recognition', ret_frame)
-			    if cv2.waitKey(5) == ord(str('q')):
-			        break
-			cv2.destroyAllWindows()
-			STATE = False
+	handler.init_identity_database(args['database'])
 
-			show result if process registering success
-			cv2.imshow('Recognition', ret_frame)
+	images = ['mark_sit.jpg', 'mark_stage.jpg', 'mark_crowd.webp', '4000.webp']
 
-	
+	for im_name in images:
+		frame =cv2.imread(im_name)
+
+		ret_frame = handler.recognize(frame)
+
+
+	print(f"duration: { end - start}")
+		# show result if process registering success
+	cv2.imshow('Recognition', ret_frame)
+
+	from PIL import Image
+	im = Image.fromarray(ret_frame)
+	im.save("your_file.jpeg")

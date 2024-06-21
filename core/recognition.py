@@ -7,7 +7,7 @@ from backbones.torchArcface import ResNet50
 import torch, torchvision, os, glob, numpy as np, cv2
 @torch.no_grad()
 class ArcRecognizer():
-    def __init__(self, weight_path=r'weights\arcface_resnet50.pth') -> None:
+    def __init__(self, weight_path=r'weights/arcface_resnet50.pth') -> None:
         # self.model = get_model('r50', dropout=0, fp16=True).cuda()
         self.model = ResNet50(dropout=0, FP16=True).cuda()
         self.model.load_state_dict(torch.load(weight_path))
